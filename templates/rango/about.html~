@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+{% load static %}
+<html>
+	<head>
+		<title>Rango-About</title>
+	</head>
+	<body>
+		<h1>About</h1>
+		<p>this something about something that is about something which is about somehing </p>
+		<img src="{% static 'rango.jpg' %}" alt="some image">
+	</body>
+</html>
