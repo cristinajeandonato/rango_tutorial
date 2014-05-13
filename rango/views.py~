@@ -5,6 +5,13 @@ from django.shortcuts import render_to_response
 from rango.models import Category
 from rango.models import Page
 from rango.forms import CategoryForm
+from rango.forms import PageForm
+
+def encode_url(str):
+    return str.replace(' ', '_')
+
+def decode_url(str):
+    return str.replace('_', ' ')
 
 def index(request):
     context = RequestContext(request)
@@ -13,7 +20,7 @@ def index(request):
     context_dict = {'categories': category_list}
     
     for category in category_list:
-        category.url = category.name.replace(' ', '_')
+        category.url = encode_url(category.name)
 
     return render_to_response('rango/index.html', context_dict, context)
 
@@ -23,7 +30,7 @@ def about(request):
 
 def category(request, category_name_url):
     context = RequestContext(request)
-    category_name = category_name_url.replace('_', ' ')
+    category_name = decode_url(category_name_url)
     context_dict = {'category_name': category_name}
 
     try:
@@ -53,4 +60,32 @@ def add_category(request):
         form = CategoryForm()
 
     return render_to_response('rango/add_category.html', {'form': form}, context)
+
+def add_page(request, category_name_url):
+    context = RequestContext(request)
+
+    category_name = decode_url(category_name_url)
+    if request.method == 'POST':
+        form = PageForm(request.POST)
+
+        if form.is_valid():
+            page = form.save(commit=False)
+
+            try:
+                cat = Category.objects.get(name=category_name)
+                page.category = cat
+            except Category.DoesNotExist:
+                return render_to_response('rango/add_category.html', {}, context)
+            
+            page.views = 0
+            page.save()
+
+            return category(request, category_name_url)
+        else:
+            print form.errors
+    else:
+        form = PageForm()
+
+    return render_to_response('rango/add_page.html',
+        {'category_name_url': category_name_url, 'category_name': category_name, 'form': form}, context)     
 
